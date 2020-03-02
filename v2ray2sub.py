@@ -56,7 +56,7 @@ def parse_inbounds(jsonobj, host, plain_amends, sed_amends):
                 except:
                     pass
 
-    return vmess_links + ss_links
+    return ss_links*2
 
 def inbound2ss(inbound, host, plain_amends, sed_amends):
     setting = inbound.get('settings', {})
@@ -67,10 +67,10 @@ def inbound2ss(inbound, host, plain_amends, sed_amends):
         'password': setting.get('password', '')
     }
     ss_dict = amend(ss_dict, plain_amends, sed_amends)
-    ss_dict['ps'] = 'ss-{host}-{port}'.format(**ss_dict)
-    ss_dict['auth'] = base64.b64encode('{method}:{password}'.format(**ss_dict).encode('utf-8')).decode()
-    ss_link = 'ss://{auth}@{host}:{port}#{ps}'.format(**ss_dict)
-    return ss_link
+    ss_dict['ps'] = base64.urlsafe_b64encode('ssr-{host}-{port}'.format(**ss_dict).encode('utf-8')).decode('utf-8')
+    ss_dict['auth'] = base64.urlsafe_b64encode(ss_dict['password'].encode('utf-8')).decode('utf-8')
+    ss_link = '{host}:{port}:origin:{method}:plain:{auth}/?obfsparam=&protoparam=&remark={ps}&group='.format(**ss_dict)
+    return 'ssr://' + base64.urlsafe_b64encode(ss_link.encode('utf-8')).decode('utf-8')
 
 def inbound2vmess(inbound, host, plain_amends, sed_amends):
     vmess_links = []
@@ -131,7 +131,7 @@ def inbound2vmess(inbound, host, plain_amends, sed_amends):
             'ps': ps
         }
         vmess_dict = amend(vmess_dict, plain_amends, sed_amends)
-        vmess_link = "vmess://" + base64.b64encode(json.dumps(vmess_dict, sort_keys=True).encode('utf-8')).decode()
+        vmess_link = "vmess://" + base64.urlsafe_b64encode(json.dumps(vmess_dict, sort_keys=True).encode('utf-8')).decode('utf-8')
         vmess_links.append(vmess_link)
     return vmess_links
 
@@ -144,7 +144,7 @@ def parse_amendsed(val):
 
 def links2base64(links):
     links_str = '\n'.join(links)
-    base_str = base64.b64encode(links_str.encode('utf-8')).decode('utf-8')
+    base_str = base64.urlsafe_b64encode(links_str.encode('utf-8')).decode('utf-8')
     if option.debug:
         print(links)
         print(base_str)
