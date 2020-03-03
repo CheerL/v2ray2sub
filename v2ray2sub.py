@@ -38,7 +38,7 @@ def amend(obj, plain_amends, sed_amends):
         obj[key] = re.sub(opt[0], opt[1], val, opt[2])
     return obj
 
-def parse_inbounds(jsonobj, host, plain_amends, sed_amends):
+def parse_inbounds(jsonobj, host, plain_amends, sed_amends, ss_type='ssr'):
     vmess_links = []
     ss_links = []
 
@@ -51,14 +51,14 @@ def parse_inbounds(jsonobj, host, plain_amends, sed_amends):
                     pass
             elif inbound['protocol'] == 'shadowsocks':
                 try:
-                    ss_link = inbound2ss(inbound, host, plain_amends, sed_amends)
+                    ss_link = inbound2ss(inbound, host, plain_amends, sed_amends, ss_type)
                     ss_links.append(ss_link)
                 except:
                     pass
 
     return ss_links + vmess_links
 
-def inbound2ss(inbound, host, plain_amends, sed_amends):
+def inbound2ss(inbound, host, plain_amends, sed_amends, ss_type='ssr'):
     setting = inbound.get('settings', {})
     ss_dict = {
         'port': inbound['port'],
@@ -66,11 +66,18 @@ def inbound2ss(inbound, host, plain_amends, sed_amends):
         'method': setting.get('method', ''),
         'password': setting.get('password', '')
     }
-    ss_dict = amend(ss_dict, plain_amends, sed_amends)
-    ss_dict['ps'] = base64.urlsafe_b64encode('ssr-{host}-{port}'.format(**ss_dict).encode('utf-8')).decode('utf-8')
-    ss_dict['auth'] = base64.urlsafe_b64encode(ss_dict['password'].encode('utf-8')).decode('utf-8')
-    ss_link = '{host}:{port}:origin:{method}:plain:{auth}/?obfsparam=&protoparam=&remarks={ps}&group='.format(**ss_dict)
-    return 'ssr://' + base64.urlsafe_b64encode(ss_link.encode('utf-8')).decode('utf-8')
+    if ss_type == 'ssr':
+        ss_dict['ps'] = base64.urlsafe_b64encode('ssr-{host}-{port}'.format(**ss_dict).encode('utf-8')).decode('utf-8')
+        ss_dict['auth'] = base64.urlsafe_b64encode(ss_dict['password'].encode('utf-8')).decode('utf-8')
+        ss_dict = amend(ss_dict, plain_amends, sed_amends)
+        ss_link = '{host}:{port}:origin:{method}:plain:{auth}/?obfsparam=&protoparam=&remarks={ps}&group='.format(**ss_dict)
+        return 'ssr://' + base64.urlsafe_b64encode(ss_link.encode('utf-8')).decode('utf-8')
+    elif ss_type == 'ss':
+        ss_dict['ps'] = 'ss-{host}-{port}'.format(**ss_dict)
+        ss_dict['auth'] = base64.b64encode('{method}:{password}'.format(**ss_dict).encode('utf-8')).decode()
+        ss_dict = amend(ss_dict, plain_amends, sed_amends)
+        ss_link = 'ss://{auth}@{host}:{port}#{ps}'.format(**ss_dict)
+        return ss_link
 
 def inbound2vmess(inbound, host, plain_amends, sed_amends):
     vmess_links = []
@@ -156,6 +163,10 @@ if __name__ == "__main__":
                         action="store",
                         default="",
                         help="server address. If not specified, program will detect the current IP")
+    parser.add_argument('-r', '--ssr',
+                        action='store_true',
+                        default=False,
+                        help="output with ssr link")
     parser.add_argument('-f', '--filter',
                         action="append",
                         help="Protocol Filter, useful for inbounds with different protocols. "
@@ -196,7 +207,8 @@ if __name__ == "__main__":
             sed_amends[key] = [pattern, repl, reflag]
 
     jsonobj = json.load(option.json)
-    links = parse_inbounds(jsonobj, host, plain_amends, sed_amends)
+    ss_type = 'ssr' if option.ssr else 'ss'
+    links = parse_inbounds(jsonobj, host, plain_amends, sed_amends, ss_type)
     base_str = links2base64(links)
     option.output.write(base_str)
 
