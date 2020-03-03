@@ -56,7 +56,7 @@ def parse_inbounds(jsonobj, host, plain_amends, sed_amends):
                 except:
                     pass
 
-    return ss_links*2
+    return ss_links + vmess_links
 
 def inbound2ss(inbound, host, plain_amends, sed_amends):
     setting = inbound.get('settings', {})
@@ -69,7 +69,7 @@ def inbound2ss(inbound, host, plain_amends, sed_amends):
     ss_dict = amend(ss_dict, plain_amends, sed_amends)
     ss_dict['ps'] = base64.urlsafe_b64encode('ssr-{host}-{port}'.format(**ss_dict).encode('utf-8')).decode('utf-8')
     ss_dict['auth'] = base64.urlsafe_b64encode(ss_dict['password'].encode('utf-8')).decode('utf-8')
-    ss_link = '{host}:{port}:origin:{method}:plain:{auth}/?obfsparam=&protoparam=&remark={ps}&group='.format(**ss_dict)
+    ss_link = '{host}:{port}:origin:{method}:plain:{auth}/?obfsparam=&protoparam=&remarks={ps}&group='.format(**ss_dict)
     return 'ssr://' + base64.urlsafe_b64encode(ss_link.encode('utf-8')).decode('utf-8')
 
 def inbound2vmess(inbound, host, plain_amends, sed_amends):
