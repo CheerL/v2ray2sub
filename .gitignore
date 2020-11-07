@@ -1,3 +1,4 @@
 output/*
 config
 .vscode
+config.json
