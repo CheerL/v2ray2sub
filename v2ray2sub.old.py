@@ -215,8 +215,7 @@ if __name__ == "__main__":
     jsonobj = json.load(option.json)
     ss_type = 'ssr' if option.ssr else 'ss'
     links = parse_inbounds(jsonobj, host, plain_amends, sed_amends, ss_type)
-    # base_str = links2base64(links)
-    base_str = '\n'.join(links)
+    base_str = links2base64(links)
     option.output.write(base_str)
 
 
