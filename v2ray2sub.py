@@ -47,7 +47,7 @@ def parse_inbounds(db, host, plain_amends, sed_amends, ss_type='ssr'):
     return ss_links + vmess_links + tj_links
 
 def inbound2ss(db, host, plain_amends, sed_amends, ss_type):
-    db.execute('SELECT port, settings, stream_settings FROM inbound WHERE protocol=="shadowsocks";')
+    db.execute('SELECT port, settings, stream_settings FROM inbounds WHERE protocol=="shadowsocks";')
     ss_links = []
     for port, settings, stream_settings in db.fetchall():
         settings = json.loads(settings)
@@ -72,7 +72,7 @@ def inbound2ss(db, host, plain_amends, sed_amends, ss_type):
     return ss_links
 
 def inbound2vmess(db, host, plain_amends, sed_amends):
-    db.execute('SELECT port, settings, stream_settings FROM inbound WHERE protocol=="vmess";')
+    db.execute('SELECT port, settings, stream_settings FROM inbounds WHERE protocol=="vmess";')
     vmess_links = []
     fake_type = "none"
     add = host
@@ -138,7 +138,7 @@ def inbound2vmess(db, host, plain_amends, sed_amends):
     return vmess_links
 
 def inbound2tj(db, host, plain_amends, sed_amends):
-    db.execute('SELECT port, settings, stream_settings FROM inbound WHERE protocol=="trojan";')
+    db.execute('SELECT port, settings, stream_settings FROM inbounds WHERE protocol=="trojan";')
     tj_links = []
     for port, settings, stream_settings in db.fetchall():
         settings = json.loads(settings)

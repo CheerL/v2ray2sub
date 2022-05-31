@@ -2,3 +2,4 @@ output/*
 config
 .vscode
 config.json
+.python-version
